@@ -1001,7 +1001,7 @@ sub INDEGO_BuildState($$) {
          '257' => "Charging",
          '258' => "Docked",
          '259' => "Docked - Software update",
-         '260' => "Docked",
+         '260' => "Docked - Charging",
          '261' => "Docked",
          '262' => "Docked - Loading map",
          '263' => "Docked - Saving map",
