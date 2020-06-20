@@ -82,6 +82,10 @@ sub INDEGO_GetStatus($;$) {
       INDEGO_SendCommand( $hash, "state" );
     }
 
+    # cleanup
+    readingsDelete( $hash, "cal" );
+    readingsDelete( $hash, "fc_cal" );
+
     return;
 }
 
@@ -681,7 +685,7 @@ sub INDEGO_ReceiveCommand($$$) {
         # calendar
         elsif ( $service eq "calendar" ) {
           if ( ref($return) eq "HASH") {
-            INDEGO_ReadingsBulkUpdateIfChanged($hash, "cal", $return->{sel_cal});
+            INDEGO_ReadingsBulkUpdateIfChanged($hash, "calendar", $return->{sel_cal});
 
             my %currentCals;
             foreach ( keys %{ $hash->{READINGS} } ) {
@@ -729,7 +733,7 @@ sub INDEGO_ReceiveCommand($$$) {
         # predictive/calendar
         elsif ( $service eq "predictive/calendar" ) {
           if ( ref($return) eq "HASH") {
-            INDEGO_ReadingsBulkUpdateIfChanged($hash, "fc_cal", $return->{sel_cal});
+            INDEGO_ReadingsBulkUpdateIfChanged($hash, "fc_calendar", $return->{sel_cal});
 
             my %currentCals;
             foreach ( keys %{ $hash->{READINGS} } ) {
