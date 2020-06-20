@@ -990,7 +990,7 @@ sub INDEGO_GetModel($$) {
     if (defined( $models->{$baretool})) {
         return $models->{$baretool};
     } else {
-        return $models;
+        return $baretool;
     }
 }
 
