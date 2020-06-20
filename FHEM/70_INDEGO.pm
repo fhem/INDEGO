@@ -126,7 +126,7 @@ sub INDEGO_Set($@) {
     return "No Argument given" if ( !defined( $a[1] ) );
 
     my $usage = "Unknown argument " . $a[1];
-    $usage .= ", choose one of password renewContext:noArg mow:noArg pause:noArg returnToDock:noArg reloadMap:noArg smartMode:on,off";
+    $usage .= ", choose one of password renewContext:noArg mow:noArg operatingData:noArg pause:noArg returnToDock:noArg reloadMap:noArg smartMode:on,off";
     $usage .= " deleteAlert:noArg" if (ReadingsVal($name, "alert_id", "-") ne "-");
     $usage .= " calendar:0,1,2,3,4,5";
 
@@ -191,6 +191,13 @@ sub INDEGO_Set($@) {
         return "No argument given" if ( !defined( $a[2] ) );
 
         INDEGO_SendCommand( $hash, "smartMode", $a[2] );
+    }
+
+    #operatingData
+    elsif ( $a[1] eq "operatingData" ) {
+        Log3 $name, 2, "INDEGO set $name " . $a[1];
+
+        INDEGO_SendCommand( $hash, "operatingData" );
     }
 
     # password
@@ -778,6 +785,24 @@ sub INDEGO_ReceiveCommand($$$) {
                 INDEGO_ReadingsBulkUpdateIfChanged($hash, "fc_loc_country", $location->{country});
                 INDEGO_ReadingsBulkUpdateIfChanged($hash, "fc_loc_dtz",     $location->{dtz});
               }
+            }
+
+            readingsEndUpdate( $hash, 1 );
+          }
+        }
+
+        # operatingData
+        elsif ( $service eq "operatingData" ) {
+          if ( ref($return) eq "HASH") {
+            if ( ref($return->{battery}) eq "HASH" ) {
+              my $battery = $return->{battery};
+              INDEGO_ReadingsBulkUpdateIfChanged($hash, "battery",         $battery->{percent});
+              INDEGO_ReadingsBulkUpdateIfChanged($hash, "battery_temp",    $battery->{battery_temp});
+              INDEGO_ReadingsBulkUpdateIfChanged($hash, "battery_voltage", $battery->{voltage});
+            }
+            if ( ref($return->{garden}) eq "HASH" ) {
+              my $garden = $return->{garden};
+              INDEGO_ReadingsBulkUpdateIfChanged($hash, "garden_size",     $garden->{size});
             }
 
             readingsEndUpdate( $hash, 1 );
