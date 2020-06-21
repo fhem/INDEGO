@@ -481,8 +481,9 @@ sub INDEGO_ReceiveCommand($$$) {
             Log3 $name, 4, "INDEGO $name:$service/$cmd RCV $err";
         }
 
-        # keep last state
-        #INDEGO_ReadingsBulkUpdateIfChanged( $hash, "state", "Error" );
+        # keep last error state
+        readingsBulkUpdate($hash, "last_error", $err);
+        readingsEndUpdate( $hash, 1 );
     }
 
     # data received
