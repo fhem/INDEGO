@@ -313,8 +313,8 @@ sub INDEGO_removeExtension($) {
 }
 
 ###################################
-sub INDEGO_SendCommand($$;$) {
-    my ( $hash, $service, $type ) = @_;
+sub INDEGO_SendCommand($$;$@) {
+    my ( $hash, $service, $type, @successor ) = @_;
     my $name        = $hash->{NAME};
     my $email       = $hash->{helper}{EMAIL};
     my $password    = INDEGO_ReadPassword($hash);
@@ -329,10 +329,11 @@ sub INDEGO_SendCommand($$;$) {
     my $URL = "https://api.indego.iot.bosch-si.com/api/v1/";
     
     if ($service ne "authenticate") {
-      return if !INDEGO_CheckContext($hash);
+      return if INDEGO_CheckContext($hash, $service, $type, @successor);
     }
 
     Log3 $name, 4, "INDEGO $name: REQ $service";
+    INDEGO_LogSuccessors( $hash, @successor );
 
     if ($service eq "authenticate") {
       $URL .= $service;
@@ -448,6 +449,7 @@ sub INDEGO_SendCommand($$;$) {
               hash        => $hash,
               service     => $service,
               cmd         => $type,
+              successor  => \@successor,
               timestamp   => $timestamp,
               callback    => \&INDEGO_ReceiveCommand,
           }
@@ -464,6 +466,7 @@ sub INDEGO_ReceiveCommand($$$) {
     my $name    = $hash->{NAME};
     my $service = $param->{service};
     my $cmd     = $param->{cmd};
+    my @successor  = @{ $param->{successor} };
 
     my $rc = ( $param->{buf} ) ? $param->{buf} : $param;
     my $return;
@@ -549,16 +552,28 @@ sub INDEGO_ReceiveCommand($$$) {
             }
             readingsEndUpdate( $hash, 1 );
 
-            INDEGO_CheckLongpoll($hash) if ($service eq "state");
+            if (
+                (
+                       $service eq "state"
+                    && AttrVal( $name, "disable", 0 ) == 0
+                    && (  !defined( $hash->{LONGPOLL} )
+                        || time() - $hash->{LONGPOLL} > 3600 )
+                )
+                || $service eq "longpollState"
+              )
+            {
+                Log3 $name, 4, "INDEGO $name: Request GET state (longPoll)";
+                # call longpoll outside of command stack
+                INDEGO_SendCommand( $hash, "longpollState" );
+            }
 
-            INDEGO_SendCommand($hash, "longpollState") if ($service eq "longpollState");
-            INDEGO_SendCommand($hash, "alerts");
-            INDEGO_SendCommand($hash, "location");
-            INDEGO_SendCommand($hash, "predictive");
-            INDEGO_SendCommand($hash, "predictive/nextcutting");
-            INDEGO_SendCommand($hash, "predictive/useradjustment");
-            INDEGO_SendCommand($hash, "predictive/useradjustment?withProposal=true");
-            INDEGO_SendCommand($hash, "map") if ($return->{map_update_available});
+            push( @successor, [ "alerts", undef ] );
+            push( @successor, [ "location", undef ] );
+            push( @successor, [ "predictive", undef ] );
+            push( @successor, [ "predictive/nextcutting", undef ] );
+            push( @successor, [ "predictive/useradjustment", undef ] );
+            push( @successor, [ "predictive/useradjustment?withProposal=true", undef ] );
+            push( @successor, [ "map", undef ] ) if ($return->{map_update_available});
           }
         }
     
@@ -838,17 +853,16 @@ sub INDEGO_ReceiveCommand($$$) {
             readingsEndUpdate( $hash, 1 );
             
             # new context received - reload state
-            INDEGO_SendCommand($hash, "state");
-            INDEGO_TriggerFullDataUpdate($hash);
-            
-            # re-execute previous command
-            if (defined($cmd)) {
-              if ($cmd =~ /(\w+)\/(\w+)/) {
-                INDEGO_SendCommand($hash, $1, $2);
-              } else {
-                INDEGO_SendCommand($hash, $cmd);
-              }
-            }
+            push( @successor, [ "state", undef ] );
+            push( @successor, [ "firmware", undef ] );
+            push( @successor, [ "automaticUpdate", undef ] );
+            push( @successor, [ "calendar", undef ] );
+            push( @successor, [ "updates", undef ] );
+            push( @successor, [ "security", undef ] );
+            push( @successor, [ "predictive/calendar", undef ] );
+            push( @successor, [ "predictive/location", undef ] );
+            push( @successor, [ "predictive/weather", undef ] );
+            push( @successor, [ "map", undef ] );
           }
         }
     
@@ -858,16 +872,19 @@ sub INDEGO_ReceiveCommand($$$) {
         }
 
     } else {
-        if ($rc =~ /401/) {
+        if ($rc =~ /401/xms) {
             Log3 $name, 4, "INDEGO $name: authentication context invalidated"; 
-            if ( $service =~ /deleteAlert|setCalendar/) {
-                INDEGO_SendCommand($hash, "authenticate", "$service");
-            } elsif ($service eq "state" and defined($cmd)) {
-                INDEGO_SendCommand($hash, "authenticate", "$service/$cmd");
-            } else {
-                readingsSingleUpdate($hash, "contextId", "", 1);
-            }
+            readingsSingleUpdate($hash, "contextId", "", 1);
             $hash->{LONGPOLL} = 0 if ($service eq "longpollState");
+
+            if ( $service =~ /deleteAlert|setCalendar/xms) {
+                INDEGO_CheckContext($hash, $service, undef, @successor);
+                return;
+            }
+            if ($service eq "state" and defined($cmd)) {
+                INDEGO_CheckContext($hash, $service, $cmd, @successor);
+                return;
+            }
         }
 
         # no alerts
@@ -883,12 +900,12 @@ sub INDEGO_ReceiveCommand($$$) {
 
         # deleteAlert
         elsif ( $service eq "deleteAlert" ) {
-            INDEGO_SendCommand($hash, "alerts");
+            push( @successor, [ "alerts", undef ] );
         }
 
         # setCalendar
         elsif ( $service eq "setCalendar" ) {
-            INDEGO_SendCommand($hash, "calendar");
+            push( @successor, [ "calendar", undef ] );
         }
 
         # smartMode
@@ -900,47 +917,45 @@ sub INDEGO_ReceiveCommand($$$) {
         }
     }
 
+    if (@successor) {
+        my @nextCmd    = @{ shift(@successor) };
+        my $cmdLength  = @nextCmd;
+        my $cmdService = $nextCmd[0];
+        my $cmdType;
+        $cmdType       = $nextCmd[1] if ( $cmdLength > 1 );
+
+        INDEGO_SendCommand( $hash, $cmdService, $cmdType, @successor )
+          if ( ( $service ne $cmdService )
+            or ( defined($cmd) && defined($cmdType) && $cmd ne $cmdType ) );
+    }
+
     return;
 }
 
-sub INDEGO_CheckContext($) {
-  my ($hash) = @_;
+sub INDEGO_CheckContext {
+  my ($hash, $service, $type, @successor) = @_;
   my $name = $hash->{NAME};
   my $contextId = ReadingsVal($name, "contextId", "");
   my $contextAge = ReadingsAge($name, "contextId", 0);
 
   if ($contextId eq "" or $contextAge > 7200) {
-    INDEGO_SendCommand($hash, "authenticate");
-    return;
+    unshift( @successor, [ $service, $type ] );
+
+    my @succ_item;
+    my $msg = " successor:";
+    for ( my $i = 0 ; $i < @successor ; $i++ ) {
+        @succ_item = @{ $successor[$i] };
+        $msg .= " $i: ";
+        $msg .= join( ",", map { defined($_) ? $_ : '' } @succ_item );
+    }
+    Log3( $name, 4, "INDEGO created" . $msg );
+
+    INDEGO_SendCommand($hash, "authenticate", undef, @successor);
+
+    return 1;
   }
   
-  return $contextId;
-}
-
-sub INDEGO_CheckLongpoll($) {
-  my ($hash) = @_;
-  my $name = $hash->{NAME};
-
-  return if ( AttrVal($name, "disable", 0) == 1 );
-
-  if (!defined($hash->{LONGPOLL}) or time() - $hash->{LONGPOLL} > 3600) {
-    Log3 $name, 4, "INDEGO $name: Request GET state (longPoll)";
-    INDEGO_SendCommand($hash, "longpollState");
-  }
-}
-
-sub INDEGO_TriggerFullDataUpdate($) {
-  my ( $hash ) = @_;
-  
-  INDEGO_SendCommand($hash, "firmware");
-  INDEGO_SendCommand($hash, "automaticUpdate");
-  INDEGO_SendCommand($hash, "calendar");
-  INDEGO_SendCommand($hash, "updates");
-  INDEGO_SendCommand($hash, "security");
-  INDEGO_SendCommand($hash, "predictive/calendar");
-  INDEGO_SendCommand($hash, "predictive/location");
-  INDEGO_SendCommand($hash, "predictive/weather");
-  INDEGO_SendCommand($hash, "map");
+  return;
 }
 
 sub INDEGO_ReadingsBulkUpdateIfChanged($$$) {
@@ -1169,6 +1184,22 @@ sub INDEGO_ReadPassword($) {
       Log3 $name, 3, "INDEGO $name: No password in file";
       return undef;
     }
+}
+
+sub INDEGO_LogSuccessors {
+    my ( $hash, @successor ) = @_;
+    my $name = $hash->{NAME};
+
+    my $msg = "INDEGO $name: successors";
+    my @succ_item;
+    for ( my $i = 0 ; $i < @successor ; $i++ ) {
+        @succ_item = @{ $successor[$i] };
+        $msg .= " $i: ";
+        $msg .= join( ",", map { defined($_) ? $_ : '' } @succ_item );
+    }
+    Log3( $name, 4, $msg ) if ( @successor > 0 );
+
+    return;
 }
 
 sub INDEGO_ShowMap($;$$) {
