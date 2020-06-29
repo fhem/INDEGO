@@ -1,3 +1,6 @@
+2020-06-29 - Revert "normalize battery percentage"
+
+This reverts commit 3d65e1755cad07f60131b9ca51fad925c8f558da.
 2020-06-20 - Merge branch 'dev' of github.com:fhem/INDEGO into dev
 2020-06-18 - Automatic updated controls and CHANGED
 2020-06-18 - initial module setup
