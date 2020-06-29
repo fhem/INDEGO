@@ -816,7 +816,7 @@ sub INDEGO_ReceiveCommand($$$) {
           if ( ref($return) eq "HASH") {
             if ( ref($return->{battery}) eq "HASH" ) {
               my $battery = $return->{battery};
-              INDEGO_ReadingsBulkUpdateIfChanged($hash, "battery",         $battery->{percent}/10);
+              INDEGO_ReadingsBulkUpdateIfChanged($hash, "battery",         $battery->{percent});
               INDEGO_ReadingsBulkUpdateIfChanged($hash, "battery_temp",    $battery->{battery_temp});
               INDEGO_ReadingsBulkUpdateIfChanged($hash, "battery_voltage", $battery->{voltage});
             }
