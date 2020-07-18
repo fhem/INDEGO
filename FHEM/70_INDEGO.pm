@@ -82,6 +82,12 @@ GP_Export(
       )
 );
 
+my $useDigestMD5 = 0;
+if ( eval { require Digest::MD5; 1 } ) {
+    $useDigestMD5 = 1;
+    Digest::MD5->import();
+}
+
 ###################################
 sub Initialize {
     my ($hash) = @_;
@@ -1173,7 +1179,7 @@ sub StorePassword {
     my $key = getUniqueId().$index;
     my $enc_pwd = "";
 
-    if(eval "use Digest::MD5;1") {
+    if ($useDigestMD5) {
       $key = Digest::MD5::md5_hex(unpack "H*", $key);
       $key .= Digest::MD5::md5_hex($key);
     }
@@ -1207,7 +1213,7 @@ sub ReadPassword {
     }
     
     if ( defined($password) ) {
-      if ( eval "use Digest::MD5;1" ) {
+      if ($useDigestMD5) {
         $key = Digest::MD5::md5_hex(unpack "H*", $key);
         $key .= Digest::MD5::md5_hex($key);
       }
