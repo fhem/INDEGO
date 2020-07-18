@@ -581,8 +581,8 @@ sub ReceiveCommand {
         }
 
         # state
-        if ( $service eq "state" or $service eq "longpollState") {
-          if ( ref($return) eq "HASH" and !defined($cmd)) {
+        if ( $service eq "state" || $service eq "longpollState") {
+          if ( ref($return) eq "HASH" && !defined($cmd)) {
             readingsBulkUpdateIfChanged($hash, "state",          BuildState($hash, $return->{state})) if (defined($return->{state}));
             readingsBulkUpdateIfChanged($hash, "state_id",       $return->{state}) if (defined($return->{state}));
             readingsBulkUpdateIfChanged($hash, "mowed",          $return->{mowed}) if (defined($return->{mowed}));
@@ -652,7 +652,7 @@ sub ReceiveCommand {
             my $alert;
             foreach $alert (@{$return}) {
               my $current_date = time_str2num(substr($alert->{date}, 0, 19));
-              if (!defined($date) or $date < $current_date) {
+              if (!defined($date) || $date < $current_date) {
                 $date = $current_date;
                 readingsBulkUpdateIfChanged($hash, "alert_number",   scalar(@{$return}));
                 readingsBulkUpdateIfChanged($hash, "alert_id",       $alert->{alert_id});
@@ -885,7 +885,7 @@ sub ReceiveCommand {
 
         # map
         elsif ( $service eq "map" ) {
-          if ( defined($return) and !ref($return)) {
+          if ( defined($return) && !ref($return)) {
             my $map = $return;
             eval { require Compress::Zlib; };
             unless($@) {
@@ -1271,8 +1271,8 @@ sub ShowMap {
       $data = Compress::Zlib::uncompress($data) if ($compress);
     }
 
-    if (defined($data) and $data ne "") {
-      if (!defined($height) and $data =~ /viewBox="0 0 (\d+) (\d+)"/) {
+    if (defined($data) && $data ne "") {
+      if (!defined($height) && $data =~ /viewBox="0 0 (\d+) (\d+)"/) {
         my $factor = $1/$width;
         $height = int($2/$factor);
       }
