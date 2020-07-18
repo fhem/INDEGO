@@ -649,8 +649,7 @@ sub ReceiveCommand {
         elsif ( $service eq "alerts" ) {
           if ( ref($return) eq "ARRAY" and scalar(@{$return}) > 0) {
             my $date;
-            my $alert;
-            foreach $alert (@{$return}) {
+            foreach my $alert (@{$return}) {
               my $current_date = time_str2num(substr($alert->{date}, 0, 19));
               if (!defined($date) || $date < $current_date) {
                 $date = $current_date;
@@ -764,15 +763,12 @@ sub ReceiveCommand {
 
             if ( ref($return->{cals}) eq "ARRAY" ) {
               my @cals = @{$return->{cals}};
-              my $cal;
-              foreach $cal (@cals) {
+              foreach my $cal (@cals) {
                 my @days = @{$cal->{days}};
-                my $day;
-                for $day (@days) {
+                for my $day (@days) {
                   my $schedule;
                   my @slots = @{$day->{slots}};
-                  my $slot;
-                  for $slot (@slots) {
+                  for my $slot (@slots) {
                     if ($slot->{En}) {
                       my $slotStr = GetSlotFormatted($hash, $slot);
                       if (defined($schedule)) {
@@ -812,15 +808,12 @@ sub ReceiveCommand {
 
             if ( ref($return->{cals}) eq "ARRAY" ) {
               my @cals = @{$return->{cals}};
-              my $cal;
-              foreach $cal (@cals) {
+              foreach my $cal (@cals) {
                 my @days = @{$cal->{days}};
-                my $day;
-                for $day (@days) {
+                for my $day (@days) {
                   my $schedule;
                   my @slots = @{$day->{slots}};
-                  my $slot;
-                  for $slot (@slots) {
+                  for my $slot (@slots) {
                     if ($slot->{En}) {
                       my $slotStr = GetSlotFormatted($hash, $slot);
                       if (defined($schedule)) {
