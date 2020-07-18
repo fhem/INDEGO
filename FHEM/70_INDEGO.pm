@@ -1276,10 +1276,10 @@ sub ShowMap {
         my $factor = $1/$width;
         $height = int($2/$factor);
       }
-      my $html = '<svg style="width:'.$width.'px; height:'.$height.'px;"' if (defined($height));
+      my $html;
+      $html = '<svg style="width:'.$width.'px; height:'.$height.'px;"' if (defined($height));
       $html .= substr($data, 4);
    
-  
       return $html;
     }
     
