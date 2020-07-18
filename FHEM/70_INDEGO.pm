@@ -132,7 +132,7 @@ sub Define {
     my $interval = 300;
 
     if (defined($a[3])) {
-      if ($a[3] =~ /^[0-9]+$/ and not defined($a[4])) {
+      if ($a[3] =~ /^[0-9]+$/xms && !defined($a[4])) {
         $interval = $a[3];
       } else {
         StorePassword($hash, $a[3]);
@@ -192,7 +192,7 @@ sub GetStatus {
     Log3( $name, 5, "INDEGO $name: called function GetStatus()" );
 
     # use actionInterval if state is busy, paused, or returning
-    $interval = AttrVal($name, "actionInterval", $interval) if (ReadingsVal($name, "state_id", "0") =~ /^[57]\d\d$/);
+    $interval = AttrVal($name, "actionInterval", $interval) if (ReadingsVal($name, "state_id", "0") =~ /^[57]\d\d$/xms);
 
     RemoveInternalTimer($hash);
     InternalTimer( gettimeofday() + $interval, \&GetStatus, $hash, 0 );
@@ -223,7 +223,7 @@ sub Get {
 
     $what = $a[1];
 
-    if ( $what =~ /^(mapsvgcache)$/ ) {
+    if ( $what =~ /^(mapsvgcache)$/xms ) {
         my $value = ReadingsVal($name, $what, "");
         if ($value eq "") {
           $value = ReadingsVal($name, ".$what", "");
@@ -561,7 +561,7 @@ sub ReceiveCommand {
         }
 
         if ( $data ne "" ) {
-            if ( $data =~ /^{/ || $data =~ /^\[/ ) {
+            if ( $data =~ /^{/xms || $data =~ /^\[/xms ) {
                 if ( !defined($cmd) || $cmd eq "" ) {
                     Log3( $name, 4, "INDEGO $name: RES $service - $data" );
                 } else {
@@ -764,7 +764,7 @@ sub ReceiveCommand {
 
             my %currentCals;
             foreach ( keys %{ $hash->{READINGS} } ) {
-              $currentCals{$_} = 1 if ( $_ =~ /^cal\d_.*/ );
+              $currentCals{$_} = 1 if ( $_ =~ /^cal\d_.*/xms );
             }
 
             if ( ref($return->{cals}) eq "ARRAY" ) {
@@ -809,7 +809,7 @@ sub ReceiveCommand {
 
             my %currentCals;
             foreach ( keys %{ $hash->{READINGS} } ) {
-              $currentCals{$_} = 1 if ( $_ =~ /^fc_cal\d_.*/ );
+              $currentCals{$_} = 1 if ( $_ =~ /^fc_cal\d_.*/xms );
             }
 
             if ( ref($return->{cals}) eq "ARRAY" ) {
@@ -964,7 +964,7 @@ sub ReceiveCommand {
         # smartMode
         elsif ( $service eq "smartMode" ) {
             readingsBulkUpdateIfChanged($hash, "fc_enabled", ($rc->{cmd} eq "on") ? 1 : 0)
-                if ($rc->{httpheader} =~ /HTTP\/1.\d 200/);
+                if ($rc->{httpheader} =~ /HTTP\/1.\d\s200/xms);
 
             readingsEndUpdate( $hash, 1 );
         }
@@ -1137,12 +1137,12 @@ sub BuildCalendar {
 
     # set current data
     foreach ( keys %{ $hash->{READINGS} } ) {
-      if ( $_ =~ /^cal(\d)_(\d)_.*/ ) {
+      if ( $_ =~ /^cal(\d)_(\d)_.*/xms ) {
         my $calnr = $1;
         $calnr--; # array starts with 0
         my $daynr = $2;
         my $value = ReadingsVal($name, $_, "");
-        if ($value =~ /^(\d{2}):(\d{2})-(\d{2}):(\d{2}) (\d{2}):(\d{2})-(\d{2}):(\d{2})$/) {
+        if ($value =~ /^(\d{2}):(\d{2})-(\d{2}):(\d{2})\s(\d{2}):(\d{2})-(\d{2}):(\d{2})$/xms) {
           my $slot1 = $cals[$calnr]->{days}[$daynr]->{slots}[0];
           $slot1->{En}    = \1;
           $slot1->{StHr}  = int($1);
@@ -1155,7 +1155,7 @@ sub BuildCalendar {
           $slot2->{StMin} = int($6);
           $slot2->{EnHr}  = int($7);
           $slot2->{EnMin} = int($8);
-        } elsif ($value =~ /^(\d{2}):(\d{2})-(\d{2}):(\d{2})$/) {
+        } elsif ($value =~ /^(\d{2}):(\d{2})-(\d{2}):(\d{2})$/xms) {
           my $slot1 = $cals[$calnr]->{days}[$daynr]->{slots}[0];
           $slot1->{En}    = \1;
           $slot1->{StHr}  = int($1);
@@ -1218,7 +1218,7 @@ sub ReadPassword {
         $key .= Digest::MD5::md5_hex($key);
       }
       my $dec_pwd = '';
-      for my $char (map { pack('C', hex($_)) } ($password =~ /(..)/g)) {
+      for my $char (map { pack('C', hex($_)) } ($password =~ /(..)/gxms)) {
         my $decode=chop($key);
         $dec_pwd.=chr(ord($char)^ord($decode));
         $key=$decode.$key;
@@ -1271,7 +1271,7 @@ sub ShowMap {
     }
 
     if (defined($data) && $data ne "") {
-      if (!defined($height) && $data =~ /viewBox="0 0 (\d+) (\d+)"/) {
+      if (!defined($height) && $data =~ /viewBox="0\s0\s(\d+)\s(\d+)"/xms) {
         my $factor = $1/$width;
         $height = int($2/$factor);
       }
@@ -1288,7 +1288,7 @@ sub ShowMap {
 sub GetMap {
     my ($request) = @_;
     
-    if ($request =~ /^\/INDEGO\/(\w+)\/map(\/(\d+)(\/(\d+))?)?/) {
+    if ($request =~ /^\/INDEGO\/(\w+)\/map(\/(\d+)(\/(\d+))?)?/xms) {
       my $name   = $1;
       my $width  = $3;
       my $height = $5;
