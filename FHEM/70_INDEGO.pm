@@ -410,7 +410,7 @@ sub SendCommand {
 
     } elsif ($service eq "deleteAlert") {
       my $id = ReadingsVal($name, "alert_id", "-");
-      return undef if ($id eq "-");
+      return if ($id eq "-");
 
       $URL .= "alerts/$id";
       $header = "x-im-context-id: ".ReadingsVal($name, "contextId", "");
@@ -1210,7 +1210,7 @@ sub ReadPassword {
 
     if ( defined($err) ) {
       Log3( $name, 3, "INDEGO $name: unable to read password from file: $err" );
-      return undef; 
+      return; 
     }
     
     if ( defined($password) ) {
@@ -1227,7 +1227,7 @@ sub ReadPassword {
       return $dec_pwd;
     } else {
       Log3( $name, 3, "INDEGO $name: No password in file" );
-      return undef;
+      return;
     }
 }
 
