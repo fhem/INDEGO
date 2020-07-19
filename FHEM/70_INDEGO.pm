@@ -1135,6 +1135,13 @@ sub BuildCalendar {
       push(@cals, \%cal);
     }
 
+    my $hours       = '([0-2]\d)';
+    my $minutes     = '([0-5]\d)';
+    my $timestamp   = qq/$hours:$minutes/;
+    my $slot        = qq/$timestamp-$timestamp/;
+    my $single_slot = qr/$slot/xms;
+    my $double_slot = qr/$slot\s$slot/xms;
+
     # set current data
     foreach ( keys %{ $hash->{READINGS} } ) {
       if ( $_ =~ /^cal(\d)_(\d)_.*/xms ) {
@@ -1142,7 +1149,7 @@ sub BuildCalendar {
         $calnr--; # array starts with 0
         my $daynr = $2;
         my $value = ReadingsVal($name, $_, "");
-        if ($value =~ /^(\d{2}):(\d{2})-(\d{2}):(\d{2})\s(\d{2}):(\d{2})-(\d{2}):(\d{2})$/xms) {
+        if ($value =~ $double_slot) {
           my $slot1 = $cals[$calnr]->{days}[$daynr]->{slots}[0];
           $slot1->{En}    = \1;
           $slot1->{StHr}  = int($1);
@@ -1155,7 +1162,7 @@ sub BuildCalendar {
           $slot2->{StMin} = int($6);
           $slot2->{EnHr}  = int($7);
           $slot2->{EnMin} = int($8);
-        } elsif ($value =~ /^(\d{2}):(\d{2})-(\d{2}):(\d{2})$/xms) {
+        } elsif ($value =~ $single_slot) {
           my $slot1 = $cals[$calnr]->{days}[$daynr]->{slots}[0];
           $slot1->{En}    = \1;
           $slot1->{StHr}  = int($1);
