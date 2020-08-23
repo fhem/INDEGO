@@ -1,1 +1,11 @@
+2020-08-23 - fixed markdown
+2020-08-23 - logpoll interval -  set to 240 seconds
+2020-07-19 - add model M+ 700
+2020-07-19 - PBP: Split long regexps into smaller qr// chunks
+2020-07-18 - own package FHEM::INDEGO
+2020-06-29 - Revert "normalize battery percentage"
+
+This reverts commit 3d65e1755cad07f60131b9ca51fad925c8f558da.
+2020-06-20 - Merge branch 'dev' of github.com:fhem/INDEGO into dev
+2020-06-18 - Automatic updated controls and CHANGED
 2020-06-18 - initial module setup
