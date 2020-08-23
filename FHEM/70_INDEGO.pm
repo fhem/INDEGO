@@ -440,7 +440,7 @@ sub SendCommand {
       $URL .= ReadingsVal($name, "state_id", "0");
       
       $header = "x-im-context-id: ".ReadingsVal($name, "contextId", "");
-      $timeout = 3600;
+      $timeout = 240;
       
       $hash->{LONGPOLL} = time();
 
@@ -617,7 +617,7 @@ sub ReceiveCommand {
                        $service eq "state"
                     && AttrVal( $name, "disable", 0 ) == 0
                     && (  !defined( $hash->{LONGPOLL} )
-                        || time() - $hash->{LONGPOLL} > 3600 )
+                        || time() - $hash->{LONGPOLL} > 240 )
                 )
                 || $service eq "longpollState"
               )
