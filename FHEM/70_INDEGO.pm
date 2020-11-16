@@ -561,7 +561,7 @@ sub ReceiveCommand {
         }
 
         if ( $data ne "" ) {
-            if ( $data =~ /^{/xms || $data =~ /^\[/xms ) {
+            if ( $data =~ /^\{/xms || $data =~ /^\[/xms ) {
                 if ( !defined($cmd) || $cmd eq "" ) {
                     Log3( $name, 4, "INDEGO $name: RES $service - $data" );
                 } else {
