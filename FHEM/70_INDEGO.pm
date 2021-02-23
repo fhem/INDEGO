@@ -1274,10 +1274,12 @@ sub ShowMap {
     $width  = 800 if (!defined($width));
 
     if ($map eq "") {
-      $map = SendCommand($hash, "map", "blocking");
-      $data = $map;
-      $map = Compress::Zlib::compress($map) if ($compress);
-      readingsSingleUpdate($hash, ".mapsvgcache", $map, 1);
+      if ( AttrVal($name, "disable", 0) == 0 ) {
+        $map = SendCommand($hash, "map", "blocking");
+        $data = $map;
+        $map = Compress::Zlib::compress($map) if ($compress);
+        readingsSingleUpdate($hash, ".mapsvgcache", $map, 1);
+      }
     } else {
       $data = Compress::Zlib::uncompress($data) if ($compress);
     }
