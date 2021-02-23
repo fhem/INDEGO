@@ -1,3 +1,4 @@
+2021-02-23 - drop successors in case of communication failure
 2020-11-26 - add model S+ 400 (3600HB0106)
 2020-11-16 - escape curly bracket in regexp
 2020-08-23 - fixed markdown
