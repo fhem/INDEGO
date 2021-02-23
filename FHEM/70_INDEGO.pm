@@ -549,6 +549,9 @@ sub ReceiveCommand {
         # keep last error state
         readingsBulkUpdate($hash, "last_error", $err);
         readingsEndUpdate( $hash, 1 );
+
+        # drop successors
+        @successor = ();
     }
 
     # data received
