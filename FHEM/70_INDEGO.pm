@@ -596,6 +596,8 @@ sub ReceiveCommand {
             readingsBulkUpdateIfChanged($hash, "state_id",       $return->{state}) if (defined($return->{state}));
             readingsBulkUpdateIfChanged($hash, "mowed",          $return->{mowed}) if (defined($return->{mowed}));
             readingsBulkUpdateIfChanged($hash, "mowed_ts",       FmtDateTime(int($return->{mowed_ts}/1000))) if (defined($return->{mowed_ts}));
+            readingsBulkUpdateIfChanged($hash, "svg_xPos",       $return->{svg_xPos}) if (defined($return->{svg_xPos}));
+            readingsBulkUpdateIfChanged($hash, "svg_yPos",       $return->{svg_yPos}) if (defined($return->{svg_yPos}));
             if ( ref($return->{runtime}) eq "HASH" ) {
               my $runtime = $return->{runtime};
               if ( ref($runtime->{total}) eq "HASH" ) {
@@ -1054,7 +1056,8 @@ sub GetModel {
         '3600HB0102' => 'S+ 350',
         '3600HB0103' => 'S+ 400',
         '3600HB0106' => 'S+ 400',
-        '3600HB0301' => 'M+ 700'
+        '3600HB0301' => 'M+ 700',
+        '3600HB0302' => 'S+ 500'
     };
     
     if (defined( $models->{$baretool})) {
@@ -1289,9 +1292,17 @@ sub ShowMap {
         my $factor = $1/$width;
         $height = int($2/$factor);
       }
+      my $xPos = ReadingsVal($name, 'svg_xPos', 0);
+      my $yPos = ReadingsVal($name, 'svg_yPos', 0);
       my $html;
-      $html = '<svg style="width:'.$width.'px; height:'.$height.'px;"' if (defined($height));
-      $html .= substr($data, 4);
+      if ($data =~ /^<svg(.*)<\/svg>/xms) {
+        $html = '<svg style="width:'.$width.'px; height:'.$height.'px;"' if (defined($height));
+        $html .= $1;
+        $html .= "<circle stroke=\"#888888\" stroke-width=\"0.5\" fill=\"#FFF601\" cx =\"$xPos\" cy =\"$yPos\" r =\"15\" />";
+        $html .= '</svg>';
+      } else {
+        $html = $data;
+      }
    
       return $html;
     }

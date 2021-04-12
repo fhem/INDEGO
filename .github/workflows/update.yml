@@ -19,9 +19,12 @@ jobs:
         filename: controls_INDEGO.txt 
     - name: update CHANGED
       run: |
-        LOG=$(date +"%Y-%m-%d") 
-        LOG+=" - $(git log -1 --pretty=%B)"
-        echo "$LOG" | cat - CHANGED > temp && mv temp CHANGED
+        GREP_AUTO_UPDATE="Automatic updated controls and CHANGED"
+        GREP_MERGE_BRANCH="Merge branch"
+        GREP_SVN_UPLOAD="SVN upload"
+        GREP_UPDATE_YML="update.yml"
+        LOG=$(git log --pretty="%as - %s" --invert-grep --grep="$GREP_AUTO_UPDATE" --grep="$GREP_MERGE_BRANCH" --grep="$GREP_SVN_UPLOAD" --grep="$GREP_UPDATE_YML")
+        echo "$LOG" | cat - CHANGED | grep . > temp && mv temp CHANGED
     - name: git commit back
       run: |
         git config --global user.email "action@github.com"
