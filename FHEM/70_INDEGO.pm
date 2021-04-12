@@ -436,7 +436,7 @@ sub SendCommand {
     } elsif ($service eq "longpollState") {
       $URL .= "alms/";
       $URL .= ReadingsVal($name, "alm_sn", "0");
-      $URL .= "/state?longpoll=true&timeout=3600&last=";
+      $URL .= "/state?longpoll=true&timeout=300&last=";
       $URL .= ReadingsVal($name, "state_id", "0");
       
       $header = "x-im-context-id: ".ReadingsVal($name, "contextId", "");
