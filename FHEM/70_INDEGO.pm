@@ -645,7 +645,7 @@ sub ReceiveCommand {
         # firmware
         elsif ( $service eq "firmware" ) {
           if ( ref($return) eq "HASH") {
-            readingsBulkUpdateIfChanged($hash, "alm_name",             $return->{alm_name});
+            readingsBulkUpdateIfChanged($hash, "alm_name",             $return->{alm_name}) if (defined($return->{alm_name}));
             readingsBulkUpdateIfChanged($hash, "service_counter",      $return->{service_counter});
             readingsBulkUpdateIfChanged($hash, "bareToolnumber",       $return->{bareToolnumber});
             readingsBulkUpdateIfChanged($hash, "alm_firmware_version", $return->{alm_firmware_version});
@@ -861,7 +861,7 @@ sub ReceiveCommand {
                 my $location = $weather->{location};
                 readingsBulkUpdateIfChanged($hash, "fc_loc_name",    $location->{name});
                 readingsBulkUpdateIfChanged($hash, "fc_loc_country", $location->{country});
-                readingsBulkUpdateIfChanged($hash, "fc_loc_dtz",     $location->{dtz});
+                readingsBulkUpdateIfChanged($hash, "fc_loc_dtz",     $location->{dtz}) if (defined($location->{dtz}));
               }
             }
 
