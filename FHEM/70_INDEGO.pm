@@ -436,7 +436,7 @@ sub SendCommand {
     } elsif ($service eq "longpollState") {
       $URL .= "alms/";
       $URL .= ReadingsVal($name, "alm_sn", "0");
-      $URL .= "/state?longpoll=true&timeout=3600&last=";
+      $URL .= "/state?longpoll=true&timeout=300&last=";
       $URL .= ReadingsVal($name, "state_id", "0");
       
       $header = "x-im-context-id: ".ReadingsVal($name, "contextId", "");
@@ -549,6 +549,9 @@ sub ReceiveCommand {
         # keep last error state
         readingsBulkUpdate($hash, "last_error", $err);
         readingsEndUpdate( $hash, 1 );
+
+        # drop successors
+        @successor = ();
     }
 
     # data received
@@ -561,7 +564,7 @@ sub ReceiveCommand {
         }
 
         if ( $data ne "" ) {
-            if ( $data =~ /^{/xms || $data =~ /^\[/xms ) {
+            if ( $data =~ /^\{/xms || $data =~ /^\[/xms ) {
                 if ( !defined($cmd) || $cmd eq "" ) {
                     Log3( $name, 4, "INDEGO $name: RES $service - $data" );
                 } else {
@@ -593,6 +596,8 @@ sub ReceiveCommand {
             readingsBulkUpdateIfChanged($hash, "state_id",       $return->{state}) if (defined($return->{state}));
             readingsBulkUpdateIfChanged($hash, "mowed",          $return->{mowed}) if (defined($return->{mowed}));
             readingsBulkUpdateIfChanged($hash, "mowed_ts",       FmtDateTime(int($return->{mowed_ts}/1000))) if (defined($return->{mowed_ts}));
+            readingsBulkUpdateIfChanged($hash, "svg_xPos",       $return->{svg_xPos}) if (defined($return->{svg_xPos}));
+            readingsBulkUpdateIfChanged($hash, "svg_yPos",       $return->{svg_yPos}) if (defined($return->{svg_yPos}));
             if ( ref($return->{runtime}) eq "HASH" ) {
               my $runtime = $return->{runtime};
               if ( ref($runtime->{total}) eq "HASH" ) {
@@ -640,7 +645,7 @@ sub ReceiveCommand {
         # firmware
         elsif ( $service eq "firmware" ) {
           if ( ref($return) eq "HASH") {
-            readingsBulkUpdateIfChanged($hash, "alm_name",             $return->{alm_name});
+            readingsBulkUpdateIfChanged($hash, "alm_name",             $return->{alm_name}) if (defined($return->{alm_name}));
             readingsBulkUpdateIfChanged($hash, "service_counter",      $return->{service_counter});
             readingsBulkUpdateIfChanged($hash, "bareToolnumber",       $return->{bareToolnumber});
             readingsBulkUpdateIfChanged($hash, "alm_firmware_version", $return->{alm_firmware_version});
@@ -856,7 +861,7 @@ sub ReceiveCommand {
                 my $location = $weather->{location};
                 readingsBulkUpdateIfChanged($hash, "fc_loc_name",    $location->{name});
                 readingsBulkUpdateIfChanged($hash, "fc_loc_country", $location->{country});
-                readingsBulkUpdateIfChanged($hash, "fc_loc_dtz",     $location->{dtz});
+                readingsBulkUpdateIfChanged($hash, "fc_loc_dtz",     $location->{dtz}) if (defined($location->{dtz}));
               }
             }
 
@@ -1050,7 +1055,9 @@ sub GetModel {
         '3600HB0101' => '400',
         '3600HB0102' => 'S+ 350',
         '3600HB0103' => 'S+ 400',
-        '3600HB0301' => 'M+ 700'
+        '3600HB0106' => 'S+ 400',
+        '3600HB0301' => 'M+ 700',
+        '3600HB0302' => 'S+ 500'
     };
     
     if (defined( $models->{$baretool})) {
@@ -1270,10 +1277,12 @@ sub ShowMap {
     $width  = 800 if (!defined($width));
 
     if ($map eq "") {
-      $map = SendCommand($hash, "map", "blocking");
-      $data = $map;
-      $map = Compress::Zlib::compress($map) if ($compress);
-      readingsSingleUpdate($hash, ".mapsvgcache", $map, 1);
+      if ( AttrVal($name, "disable", 0) == 0 ) {
+        $map = SendCommand($hash, "map", "blocking");
+        $data = $map;
+        $map = Compress::Zlib::compress($map) if ($compress);
+        readingsSingleUpdate($hash, ".mapsvgcache", $map, 1);
+      }
     } else {
       $data = Compress::Zlib::uncompress($data) if ($compress);
     }
@@ -1283,9 +1292,17 @@ sub ShowMap {
         my $factor = $1/$width;
         $height = int($2/$factor);
       }
+      my $xPos = ReadingsVal($name, 'svg_xPos', 0);
+      my $yPos = ReadingsVal($name, 'svg_yPos', 0);
       my $html;
-      $html = '<svg style="width:'.$width.'px; height:'.$height.'px;"' if (defined($height));
-      $html .= substr($data, 4);
+      if ($data =~ /^<svg(.*)<\/svg>/xms) {
+        $html = '<svg style="width:'.$width.'px; height:'.$height.'px;"' if (defined($height));
+        $html .= $1;
+        $html .= "<circle stroke=\"#888888\" stroke-width=\"0.5\" fill=\"#FFF601\" cx =\"$xPos\" cy =\"$yPos\" r =\"15\" />";
+        $html .= '</svg>';
+      } else {
+        $html = $data;
+      }
    
       return $html;
     }

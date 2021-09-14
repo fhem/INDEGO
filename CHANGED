@@ -1,12 +1,32 @@
-2020-08-23 - Merge branch 'dev'
+2021-09-06 - Merge pull request #3 from siggel/dev
+2021-04-12 - longpoll timeout 3 minutes
+2021-04-12 - show position in map
+2021-02-23 - suppress map loading while device is disabled
+2021-02-23 - drop successors in case of communication failure
+2020-11-26 - add model S+ 400 (3600HB0106)
+2020-11-16 - escape curly bracket in regexp
 2020-08-23 - fixed markdown
 2020-08-23 - logpoll interval -  set to 240 seconds
+2020-08-23 - add CommandRef
 2020-07-19 - add model M+ 700
 2020-07-19 - PBP: Split long regexps into smaller qr// chunks
-2020-07-18 - own package FHEM::INDEGO
+2020-07-18 - PBP: Regular expression without "/xms" flag
+2020-07-18 - PBP: Expression form of "eval"
+2020-07-18 - PBP: Lexical loop variables
+2020-07-18 - PBP: Variable declared in conditional statement
+2020-07-18 - PBP: Mixed high and low-precedence booleans
+2020-07-18 - PBP: remove return-statement with explicit "undef"
+2020-07-14 - own package FHEM::INDEGO
 2020-06-29 - Revert "normalize battery percentage"
-
-This reverts commit 3d65e1755cad07f60131b9ca51fad925c8f558da.
-2020-06-20 - Merge branch 'dev' of github.com:fhem/INDEGO into dev
-2020-06-18 - Automatic updated controls and CHANGED
+2020-06-29 - implement command stack
+2020-06-21 - add reading last_error
+2020-06-20 - renamed readings cal/fc_cal to (fc_)calendar
+2020-06-20 - normalize battery percentage
+2020-06-20 - docked charging state
+2020-06-20 - return bareToolNumber if model is unknown
+2020-06-20 - add set operatingData
+2020-06-20 - add new models
 2020-06-18 - initial module setup
+2019-12-20 - Rename INDEGO/70_INDEGO.pm to INDEGO/FHEM/70_INDEGO.pm
+2019-12-20 - Rename 70_INDEGO.pm to INDEGO/70_INDEGO.pm
+2020-06-18 - Initial commit
