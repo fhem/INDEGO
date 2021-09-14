@@ -1,5 +1,6 @@
 2021-09-06 - Merge pull request #3 from siggel/dev
 2021-04-12 - longpoll timeout 3 minutes
+2021-04-12 - show position in map
 2021-02-23 - suppress map loading while device is disabled
 2021-02-23 - drop successors in case of communication failure
 2020-11-26 - add model S+ 400 (3600HB0106)
