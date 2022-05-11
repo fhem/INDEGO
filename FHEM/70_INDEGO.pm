@@ -386,6 +386,8 @@ sub SendCommand {
     my $data;
     my $method      = "GET";
 
+    return if ( AttrVal($name, "disable", 0) == 1 );
+
     Log3( $name, 5, "INDEGO $name: called function SendCommand()" );
 
     my $URL = "https://api.indego.iot.bosch-si.com/api/v1/";
