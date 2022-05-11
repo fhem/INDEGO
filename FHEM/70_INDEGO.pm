@@ -404,7 +404,7 @@ sub SendCommand {
       $header = "Content-Type: application/json";
       $header .= "\r\nAuthorization: Basic ";
       $header .= encode_base64("$email:$password","");
-      $data = "{\"device\":\"\", \"os_type\":\"Android\", \"os_version\":\"4.0\", \"dvc_manuf\":\"unknown\", \"dvc_type\":\"unknown\"}";
+      $data = "{\"device\":\"\", \"os_type\":\"Android\", \"os_version\":\"4.0\", \"dvc_manuf\":\"unknown\", \"dvc_type\":\"unknown\", \"accept_tc_id\":\"202012\"}";
       $method = "POST";
 
     } elsif ($service eq "deauthenticate") {
