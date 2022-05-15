@@ -386,6 +386,8 @@ sub SendCommand {
     my $data;
     my $method      = "GET";
 
+    return if ( AttrVal($name, "disable", 0) == 1 );
+
     Log3( $name, 5, "INDEGO $name: called function SendCommand()" );
 
     my $URL = "https://api.indego.iot.bosch-si.com/api/v1/";
@@ -402,7 +404,7 @@ sub SendCommand {
       $header = "Content-Type: application/json";
       $header .= "\r\nAuthorization: Basic ";
       $header .= encode_base64("$email:$password","");
-      $data = "{\"device\":\"\", \"os_type\":\"Android\", \"os_version\":\"4.0\", \"dvc_manuf\":\"unknown\", \"dvc_type\":\"unknown\"}";
+      $data = "{\"device\":\"\", \"os_type\":\"Android\", \"os_version\":\"4.0\", \"dvc_manuf\":\"unknown\", \"dvc_type\":\"unknown\", \"accept_tc_id\":\"202012\"}";
       $method = "POST";
 
     } elsif ($service eq "deauthenticate") {
@@ -547,7 +549,7 @@ sub ReceiveCommand {
         }
 
         # keep last error state
-        readingsBulkUpdate($hash, "last_error", $err);
+        readingsBulkUpdate($hash, "last_error", $err) if ($service ne "longpollState");
         readingsEndUpdate( $hash, 1 );
 
         # drop successors
