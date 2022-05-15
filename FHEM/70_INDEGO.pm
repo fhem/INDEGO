@@ -549,7 +549,7 @@ sub ReceiveCommand {
         }
 
         # keep last error state
-        readingsBulkUpdate($hash, "last_error", $err);
+        readingsBulkUpdate($hash, "last_error", $err) if ($service ne "longpollState");
         readingsEndUpdate( $hash, 1 );
 
         # drop successors
