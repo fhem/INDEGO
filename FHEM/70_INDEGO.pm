@@ -876,9 +876,9 @@ sub ReceiveCommand {
           if ( ref($return) eq "HASH") {
             if ( ref($return->{battery}) eq "HASH" ) {
               my $battery = $return->{battery};
-              readingsBulkUpdateIfChanged($hash, "battery",         $battery->{percent});
-              readingsBulkUpdateIfChanged($hash, "battery_temp",    $battery->{battery_temp});
-              readingsBulkUpdateIfChanged($hash, "battery_voltage", $battery->{voltage});
+              readingsBulkUpdate($hash, "battery",         $battery->{percent});
+              readingsBulkUpdate($hash, "battery_temp",    $battery->{battery_temp});
+              readingsBulkUpdate($hash, "battery_voltage", $battery->{voltage});
             }
             if ( ref($return->{garden}) eq "HASH" ) {
               my $garden = $return->{garden};
